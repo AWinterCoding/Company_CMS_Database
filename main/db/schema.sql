@@ -1,22 +1,30 @@
 DROP DATABASE IF EXISTS company_db;
-CREATE DATABASE movies_db;
+CREATE DATABASE company_db;
 
-USE movie_db;
+USE company_db;
 
 CREATE TABLE departments(
-    department_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     department VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE roles(
-    role_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     job_title VARCHAR(50) NOT NULL,
-    salary INT NOT NULL
+    salary INT NOT NULL,
+    department_id INT,
+    FOREIGN KEY (department_id)
+    REFERENCES departments(id)
+    ON DELETE SET NULL
 );
 
 CREATE TABLE employees(
-    employee_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
-    manager VARCHAR(100)
+    role_id INT,
+    FOREIGN KEY (role_id)
+    REFERENCES roles(id)
+    ON DELETE SET NULL,
+    manager_id INT
 );
