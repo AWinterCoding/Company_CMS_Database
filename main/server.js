@@ -133,10 +133,27 @@ async function roleCreation(){
         name: "roleName",
         type: "input",
         message: "What would you like the new Role to be called?",
-    }];
+    },
+    {
+        name: "salary",
+        type: "input",
+        message: "What is the salary for this Role?"
+    },
+    {
+        name: "department",
+        type: "list",
+        message: "Which department is this role located in?",
+        choices: [
+            1,
+            2,
+            3,
+            4,
+        ]
+    }
+];
     inquirer.prompt(question).then((answer)=>{
-  db.query(`INSERT INTO roles (job_title)
-  VALUES (?)`, answer.roleName, function(err, result){
+  db.query(`INSERT INTO roles (job_title, salary, department_id)
+  VALUES ("${answer.roleName}", ${answer.salary}, ${answer.department})`, function(err, result){
     roleFetch();
   });
     })
@@ -145,13 +162,32 @@ async function roleCreation(){
 //function to create a new employee
 async function employeeCreation(){
     const question = [{
-        name: "employeeName",
+        name: "first_name",
         type: "input",
         message: "What is the Employees first name?",
-    }];
+    },
+    {
+        name: "last_name",
+        type: "input",
+        message: "What is the Employees last name?"
+    },
+    {
+        name: "role_id",
+        type: "list",
+        message: "What is the role of this employee?",
+        choices: [1,2,3,4]
+    },
+    {
+        name: "manager_id",
+        type: "input",
+        message: "If the user has a manager, please enter their id here, if not leave it blank"
+    }
+];
     inquirer.prompt(question).then((answer)=>{
-  db.query(`INSERT INTO employees (first_name)
-  VALUES (?)`, answer.employeeName, function(err, result){
+  db.query(`INSERT INTO employees (first_name, last_name, role_id, manager_id)
+  VALUES ("${answer.first_name}", "${answer.last_name}", ${answer.role_id}, NULL)`, function(err, result){
+    console.log(err);
+    console.log(result);
     employeeFetch();
   });
     })
