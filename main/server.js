@@ -59,6 +59,7 @@ async function runMenu(){
 let rolelist = [];
 let departmentlist = [];
 let employeelist = [];
+let employeeid = [];
 
 //function to check the answer of the prompt and then determining what process to complete
 function menuCheck(answers){
@@ -165,7 +166,7 @@ async function employeeCreation(){
         message: "What is the Employees last name?"
     },
     {
-        name: "role_id",
+        name: "role",
         type: "list",
         message: "What is the role of this employee?",
         choices: rolelist
@@ -178,10 +179,25 @@ async function employeeCreation(){
     }
 ];
     inquirer.prompt(question).then((answer)=>{
-  db.query(`INSERT INTO employees (first_name, last_name, role_id, manager_id)
-  VALUES ("${answer.first_name}", "${answer.last_name}", ${answer.role_id}, NULL)`, function(err, result){
-    employeeFetch();
-  });
+        db.query(`SELECT * FROM roles WHERE job_title = "${answer.role}"`, function(err, results){
+            let id;
+            if(answer.manager_id == "N/A"){
+                id = "NULL"
+            }else{
+                let position;
+                for(i = 0; i < employeelist.length; i++){
+                    console.log(employeelist[i]);
+                    if(answer.manager_id == employeelist[i]){
+                        position = i;
+                    }
+                }
+            id = employeeid[position];
+        }
+            db.query(`INSERT INTO employees (first_name, last_name, role_id, manager_id)
+            VALUES ("${answer.first_name}", "${answer.last_name}", ${results[0].id}, ${id})`, function(err, result){
+              employeeFetch();
+            });
+    });
     })
 }
 
@@ -201,7 +217,7 @@ function selectRoles(){
     db.query(`SELECT * FROM roles`, function(err, results){
         rolelist = [];
         results.forEach(element => {
-            rolelist.push(element);
+            rolelist.push(element.job_title);
         });
     });
 }
@@ -211,7 +227,8 @@ function selectEmployees(){
     db.query(`SELECT * FROM employees`, function(err, results){
         employeelist = [];
         results.forEach(element => {
-            employeelist.push(element);
+            employeelist.push(element.first_name + " " + element.last_name);
+            employeeid.push(element.id);
         });
     });
 }
