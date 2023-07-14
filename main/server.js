@@ -24,6 +24,9 @@ const db = mysql.createConnection(
 
 //inquirer menu
 function init(){
+    selectDepartments();
+    selectEmployees();
+    selectRoles();
     quitCondition = false;
     while(!quitCondition){quitCondition =  runMenu();}
 }
@@ -53,6 +56,10 @@ async function runMenu(){
     );
 }
 
+let rolelist = [];
+let departmentlist = [];
+let employeelist = [];
+
 //function to check the answer of the prompt and then determining what process to complete
 function menuCheck(answers){
     switch(answers.menu){
@@ -78,37 +85,22 @@ function menuCheck(answers){
             console.log("Update Employee");
             break;
         case "Quit":
-            return menuCondition = true;
+            return true;
     }
 }
 
 function employeeFetch(){
-    db.query(`SELECT * FROM employees`, function(err, results){
-        console.log("\nHere are all of the Employees\n");
-        results.forEach(element => {
-            console.log(`${element.first_name} ${element.last_name}`);
-        });
-    });
+    selectEmployees();
 }
 
 //function that displays all current roles
 function roleFetch(){
-    db.query(`SELECT * FROM roles`, function(err, results){
-        console.log("\nHere are all of the Roles\n");
-        results.forEach(element => {
-            console.log(element.job_title);
-        });
-    });
+    selectRoles();
 }
 
 //function that displays all current departments
 function departmentFetch(){
-    db.query(`SELECT * FROM departments`, function(err, results){
-        console.log("\nHere are all of the Departments \n");
-        results.forEach(element => {
-            console.log(element.department);
-        });
-    });
+    selectDepartments();
 }
 
 //function that creates a new department
@@ -120,7 +112,7 @@ async function departmentCreation(){
     }];
     inquirer.prompt(question).then((answer)=>{
   db.query(`INSERT INTO departments (department)
-  VALUES (?)`, answer.deptName, function(err, result){
+  VALUES ("${answer.deptName}")`, function(err, result){
     departmentFetch();
   });
 
@@ -143,24 +135,25 @@ async function roleCreation(){
         name: "department",
         type: "list",
         message: "Which department is this role located in?",
-        choices: [
-            1,
-            2,
-            3,
-            4,
-        ]
+        choices: departmentlist
     }
 ];
+
+// we need to do a nested query here unfortunately, otherwise the query 
+// to grab the department id won't complete before the other query is initiated
     inquirer.prompt(question).then((answer)=>{
-  db.query(`INSERT INTO roles (job_title, salary, department_id)
-  VALUES ("${answer.roleName}", ${answer.salary}, ${answer.department})`, function(err, result){
-    roleFetch();
-  });
+        db.query(`SELECT * FROM departments WHERE department = "${answer.department}"`, function(err, results){
+            db.query(`INSERT INTO roles (job_title, salary, department_id)
+            VALUES ("${answer.roleName}", ${answer.salary}, ${results[0].id})`, function(err, result){
+              roleFetch();
+            });
+    });
     })
 }
 
 //function to create a new employee
 async function employeeCreation(){
+    employeelist.push("N/A");
     const question = [{
         name: "first_name",
         type: "input",
@@ -175,21 +168,52 @@ async function employeeCreation(){
         name: "role_id",
         type: "list",
         message: "What is the role of this employee?",
-        choices: [1,2,3,4]
+        choices: rolelist
     },
     {
         name: "manager_id",
-        type: "input",
-        message: "If the user has a manager, please enter their id here, if not leave it blank"
+        type: "list",
+        message: "manager list",
+        choices: employeelist
     }
 ];
     inquirer.prompt(question).then((answer)=>{
   db.query(`INSERT INTO employees (first_name, last_name, role_id, manager_id)
   VALUES ("${answer.first_name}", "${answer.last_name}", ${answer.role_id}, NULL)`, function(err, result){
-    console.log(err);
-    console.log(result);
     employeeFetch();
   });
     })
 }
+
+//method to select all departments
+function selectDepartments(){
+    db.query(`SELECT * FROM departments`, function(err, results){
+        departmentlist = [];
+        results.forEach(element => {
+            departmentlist.push(element.department);
+        });
+    });
+    return departmentlist = [];
+}
+
+//method to select all roles
+function selectRoles(){
+    db.query(`SELECT * FROM roles`, function(err, results){
+        rolelist = [];
+        results.forEach(element => {
+            rolelist.push(element);
+        });
+    });
+}
+
+//method to select all employees
+function selectEmployees(){
+    db.query(`SELECT * FROM employees`, function(err, results){
+        employeelist = [];
+        results.forEach(element => {
+            employeelist.push(element);
+        });
+    });
+}
+
 init();
