@@ -70,10 +70,12 @@ function menuCheck(answers){
             generateUI.departmentPrint(departmentlist);
             break;
         case "View all Roles":
-            roleFetch();
+            selectRoles();
+            generateUI.rolePrint(rolelist);
             break;
         case "View all Employees":
-            employeeFetch();
+            selectEmployees();
+            generateUI.employeePrint(employeelist);
             break;
         case "Add a Department":
             departmentCreation();
@@ -90,20 +92,6 @@ function menuCheck(answers){
         case "Quit":
             return true;
     }
-}
-
-function employeeFetch(){
-    selectEmployees();
-}
-
-//function that displays all current roles
-function roleFetch(){
-    selectRoles();
-}
-
-//function that displays all current departments
-function departmentFetch(){
-    selectDepartments();
 }
 
 //function that creates a new department
@@ -219,11 +207,16 @@ function selectDepartments(){
 
 //method to select all roles
 function selectRoles(){
-    db.query(`SELECT * FROM roles`, function(err, results){
+    selectDepartments();
+    db.query(`SELECT roles.id, roles.job_title, roles.salary, departments.department FROM roles LEFT JOIN departments ON roles.department_id=departments.id`, function(err, results){
+        if(err){
+            console.log(err);
+        }else{
         rolelist = [];
         results.forEach(element => {
-            rolelist.push(element.job_title);
+            rolelist.push(element);
         });
+    }
     });
 }
 
@@ -232,7 +225,7 @@ function selectEmployees(){
     db.query(`SELECT * FROM employees`, function(err, results){
         employeelist = [];
         results.forEach(element => {
-            employeelist.push(element.first_name + " " + element.last_name);
+            employeelist.push(element);
             employeeid.push(element.id);
         });
     });
