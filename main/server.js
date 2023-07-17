@@ -208,7 +208,11 @@ function selectDepartments(){
 //method to select all roles
 function selectRoles(){
     selectDepartments();
-    db.query(`SELECT roles.id, roles.job_title, roles.salary, departments.department FROM roles LEFT JOIN departments ON roles.department_id=departments.id`, function(err, results){
+    db.query(`SELECT roles.id, roles.job_title, roles.salary, departments.department 
+    FROM roles 
+    LEFT JOIN departments 
+    ON roles.department_id=departments.id`, 
+    function(err, results){
         if(err){
             console.log(err);
         }else{
@@ -222,12 +226,24 @@ function selectRoles(){
 
 //method to select all employees
 function selectEmployees(){
-    db.query(`SELECT * FROM employees`, function(err, results){
+    db.query(`SELECT employees.id, employees.first_name, employees.last_name, departments.department, roles.job_title, roles.salary, managers.first_name AS manager_first_name, managers.last_name AS manager_last_name
+    FROM employees
+    LEFT JOIN roles
+    ON roles.id=employees.role_id
+    LEFT JOIN departments
+    ON departments.id=roles.department_id
+    LEFT JOIN employees AS managers
+    ON employees.manager_id=managers.id
+    `, function(err, results){
+        if(err){
+            console.log(err);
+        }else{
         employeelist = [];
         results.forEach(element => {
             employeelist.push(element);
             employeeid.push(element.id);
         });
+    }
     });
 }
 
