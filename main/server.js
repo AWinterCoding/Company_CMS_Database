@@ -1,6 +1,7 @@
 const express = require("express");
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
+const generateUI = require("./utils/generateUI");
 
 const PORT = process.env.PORT || 3001;
 const app = express();
@@ -65,7 +66,8 @@ let employeeid = [];
 function menuCheck(answers){
     switch(answers.menu){
         case "View all Departments":
-            departmentFetch();
+            selectDepartments();
+            generateUI.departmentPrint(departmentlist);
             break;
         case "View all Roles":
             roleFetch();
@@ -204,12 +206,15 @@ async function employeeCreation(){
 //method to select all departments
 function selectDepartments(){
     db.query(`SELECT * FROM departments`, function(err, results){
+        if(err){
+            console.log(err);
+        }else{
         departmentlist = [];
         results.forEach(element => {
-            departmentlist.push(element.department);
+            departmentlist.push(element);
         });
+    }
     });
-    return departmentlist = [];
 }
 
 //method to select all roles
