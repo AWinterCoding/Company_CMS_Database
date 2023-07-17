@@ -83,7 +83,7 @@ function menuCheck(answers){
             employeeCreation();
             break;
         case "Update an Employee Role":
-            console.log("Update Employee");
+            updateRole();
             break;
         case "Quit":
             return true;
@@ -230,6 +230,47 @@ function selectEmployees(){
             employeelist.push(element.first_name + " " + element.last_name);
             employeeid.push(element.id);
         });
+    });
+}
+
+function updateRole(){
+    const question = [{
+        name: "employeeSelect",
+        type: "list",
+        message: "which employee would you like to update",
+        choices: employeelist
+    },
+    {
+        name: "roleSelection",
+        type: "list",
+        message: "which role would you like this user to have",
+        choices: rolelist
+    }
+]
+    inquirer.prompt(question).then((answer)=>{
+        let employeeMatch;
+        for(i = 0; i < employeelist.length; i++){
+            if(employeelist[i] == answer.employeeSelect){
+                employeeMatch = i;
+                console.log(employeeMatch);
+            }
+        }
+        //doing a double query in order to confirm the role id then use that role id to do the update on the employees
+        //the for loop above grabs the employee id to use for the update
+        db.query(`SELECT * FROM roles WHERE job_title = "${answer.roleSelection}"`, function(err, results){
+            if(err){
+                console.log(err);
+            }else{
+                console.log(results);
+            }
+             db.query(`UPDATE employees SET role_id = ${results[0].id} WHERE id = ${employeeid[employeeMatch]}`, function(err, results){
+                if(err){
+                    console.log(err);
+                }else{
+                    console.log(results);
+                }
+             });
+         });
     });
 }
 
