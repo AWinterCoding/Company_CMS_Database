@@ -25,9 +25,9 @@ const db = mysql.createConnection(
 
 //inquirer menu
 function init(){
-    selectDepartments();
-    selectEmployees();
-    selectRoles();
+    selectDepartments(false);
+    selectEmployees(false);
+    selectRoles(false);
     quitCondition = false;
     while(!quitCondition){quitCondition =  runMenu();}
 }
@@ -66,19 +66,16 @@ let employeeid = [];
 function menuCheck(answers){
     switch(answers.menu){
         case "View all Departments":
-            selectDepartments();
-            generateUI.departmentPrint(departmentlist);
+            selectDepartments(true);
             break;
         case "View all Roles":
-            selectRoles();
-            generateUI.rolePrint(rolelist);
+            selectRoles(true);
             break;
         case "View all Employees":
-            selectEmployees();
-            generateUI.employeePrint(employeelist);
+            selectEmployees(true);
             break;
         case "Add a Department":
-            departmentCreation();
+            departmentCreation(true);
             break;
         case "Add a Role":
             roleCreation();
@@ -101,10 +98,14 @@ async function departmentCreation(){
         type: "input",
         message: "What would you like the new department to be called?",
     }];
-    inquirer.prompt(question).then((answer)=>{
+    await inquirer.prompt(question).then((answer)=>{
   db.query(`INSERT INTO departments (department)
   VALUES ("${answer.deptName}")`, function(err, result){
-    departmentFetch();
+    if(err){
+        console.log(err);
+    }else{
+        selectDepartments(true);
+    }
   });
 
     })
@@ -112,6 +113,10 @@ async function departmentCreation(){
 
 //function to create a new  role.
 async function roleCreation(){
+    let departmentNames = [];
+    departmentlist.forEach(element => {
+        departmentNames.push(element.department);
+    });
     const question = [{
         name: "roleName",
         type: "input",
@@ -126,7 +131,7 @@ async function roleCreation(){
         name: "department",
         type: "list",
         message: "Which department is this role located in?",
-        choices: departmentlist
+        choices: departmentNames
     }
 ];
 
@@ -134,9 +139,16 @@ async function roleCreation(){
 // to grab the department id won't complete before the other query is initiated
     inquirer.prompt(question).then((answer)=>{
         db.query(`SELECT * FROM departments WHERE department = "${answer.department}"`, function(err, results){
+            if(err){
+                console.log(err);
+            }
             db.query(`INSERT INTO roles (job_title, salary, department_id)
             VALUES ("${answer.roleName}", ${answer.salary}, ${results[0].id})`, function(err, result){
-              roleFetch();
+                if(err){
+                    console.log(err);
+                }else{
+                    selectRoles(true);
+                }
             });
     });
     })
@@ -144,7 +156,15 @@ async function roleCreation(){
 
 //function to create a new employee
 async function employeeCreation(){
-    employeelist.push("N/A");
+    let roleName = [];
+    rolelist.forEach(element => {
+        roleName.push(element.job_title);
+    });
+    let employeeName = [];
+    employeelist.forEach(element => {
+        employeeName.push(`${element.first_name} ${element.last_name}`);
+    });
+    employeeName.push("N/A");
     const question = [{
         name: "first_name",
         type: "input",
@@ -159,13 +179,13 @@ async function employeeCreation(){
         name: "role",
         type: "list",
         message: "What is the role of this employee?",
-        choices: rolelist
+        choices: roleName
     },
     {
         name: "manager_id",
         type: "list",
         message: "manager list",
-        choices: employeelist
+        choices: employeeName
     }
 ];
     inquirer.prompt(question).then((answer)=>{
@@ -176,8 +196,7 @@ async function employeeCreation(){
             }else{
                 let position;
                 for(i = 0; i < employeelist.length; i++){
-                    console.log(employeelist[i]);
-                    if(answer.manager_id == employeelist[i]){
+                    if(answer.manager_id == `${employeelist[i].first_name} ${employeelist[i].last_name}`){
                         position = i;
                     }
                 }
@@ -185,14 +204,14 @@ async function employeeCreation(){
         }
             db.query(`INSERT INTO employees (first_name, last_name, role_id, manager_id)
             VALUES ("${answer.first_name}", "${answer.last_name}", ${results[0].id}, ${id})`, function(err, result){
-              employeeFetch();
+              selectEmployees(true);
             });
     });
     })
 }
 
 //method to select all departments
-function selectDepartments(){
+function selectDepartments(printTrue){
     db.query(`SELECT * FROM departments`, function(err, results){
         if(err){
             console.log(err);
@@ -201,12 +220,15 @@ function selectDepartments(){
         results.forEach(element => {
             departmentlist.push(element);
         });
+        if(printTrue){
+            generateUI.departmentPrint(departmentlist);
+        }
     }
     });
 }
 
 //method to select all roles
-function selectRoles(){
+function selectRoles(printTrue){
     selectDepartments();
     db.query(`SELECT roles.id, roles.job_title, roles.salary, departments.department 
     FROM roles 
@@ -220,12 +242,15 @@ function selectRoles(){
         results.forEach(element => {
             rolelist.push(element);
         });
+        if(printTrue){
+            generateUI.rolePrint(rolelist);
+        }
     }
     });
 }
 
 //method to select all employees
-function selectEmployees(){
+function selectEmployees(printTrue){
     db.query(`SELECT employees.id, employees.first_name, employees.last_name, departments.department, roles.job_title, roles.salary, managers.first_name AS manager_first_name, managers.last_name AS manager_last_name
     FROM employees
     LEFT JOIN roles
@@ -243,30 +268,40 @@ function selectEmployees(){
             employeelist.push(element);
             employeeid.push(element.id);
         });
+        if(printTrue){
+            generateUI.employeePrint(employeelist);
+        }
     }
     });
 }
 
 function updateRole(){
+    let employeeName = [];
+    employeelist.forEach(element => {
+        employeeName.push(`${element.first_name} ${element.last_name}`);
+    });
+    let roleName = [];
+    rolelist.forEach(element => {
+        roleName.push(`${element.job_title}`)
+    });
     const question = [{
         name: "employeeSelect",
         type: "list",
         message: "which employee would you like to update",
-        choices: employeelist
+        choices: employeeName
     },
     {
         name: "roleSelection",
         type: "list",
         message: "which role would you like this user to have",
-        choices: rolelist
+        choices: roleName
     }
 ]
     inquirer.prompt(question).then((answer)=>{
         let employeeMatch;
         for(i = 0; i < employeelist.length; i++){
-            if(employeelist[i] == answer.employeeSelect){
+            if(`${employeelist[i].first_name} ${employeelist[i].last_name}` == answer.employeeSelect){
                 employeeMatch = i;
-                console.log(employeeMatch);
             }
         }
         //doing a double query in order to confirm the role id then use that role id to do the update on the employees
@@ -274,14 +309,12 @@ function updateRole(){
         db.query(`SELECT * FROM roles WHERE job_title = "${answer.roleSelection}"`, function(err, results){
             if(err){
                 console.log(err);
-            }else{
-                console.log(results);
             }
              db.query(`UPDATE employees SET role_id = ${results[0].id} WHERE id = ${employeeid[employeeMatch]}`, function(err, results){
                 if(err){
                     console.log(err);
                 }else{
-                    console.log(results);
+                    selectEmployees(true);
                 }
              });
          });
