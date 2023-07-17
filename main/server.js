@@ -28,13 +28,11 @@ function init(){
     selectDepartments(false);
     selectEmployees(false);
     selectRoles(false);
-    quitCondition = false;
-    while(!quitCondition){quitCondition =  runMenu();}
+    runMenu();
 }
 
 //function to prompt the menu and move forward after making a selection
 async function runMenu(){
-    let menuCondition = false;
     const questionArray = [{
         name: "menu",
         type: "list",
@@ -50,11 +48,17 @@ async function runMenu(){
             "Quit"
         ]
     }];
-    await inquirer.prompt(questionArray).then((answers) =>{
-        menuCondition = menuCheck(answers);
-        return menuCondition;
+    let quitCondition = false;
+    while(!quitCondition){
+   await inquirer.prompt(questionArray).then((answers) =>{
+        if(answers.menu == "Quit"){
+            quitCondition = true;
+        }else{
+            menuCheck(answers);
+        }
     }
     );
+}
 }
 
 let rolelist = [];
@@ -75,7 +79,7 @@ function menuCheck(answers){
             selectEmployees(true);
             break;
         case "Add a Department":
-            departmentCreation(true);
+            departmentCreation();
             break;
         case "Add a Role":
             roleCreation();
@@ -87,7 +91,7 @@ function menuCheck(answers){
             updateRole();
             break;
         case "Quit":
-            return true;
+            quitCondition = true;
     }
 }
 
