@@ -48,18 +48,18 @@ async function runMenu(){
             "Quit"
         ]
     }];
-    let quitCondition = false;
-    while(!quitCondition){
+    // let quitCondition = false;
+    // while(!quitCondition){
    await inquirer.prompt(questionArray).then((answers) =>{
-        if(answers.menu == "Quit"){
-            quitCondition = true;
-        }else{
+        // if(answers.menu == "Quit"){
+            // quitCondition = true;
+        // }else{
             menuCheck(answers);
-        }
+        // }
     }
     );
 }
-}
+// }
 
 let rolelist = [];
 let departmentlist = [];
