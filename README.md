@@ -18,6 +18,8 @@ A content management system for a simple SQL database.
 
 For installation please be sure to pull down the code, run npm init, you will need to install express, mysql2, and inquirer, for inquirer please be sure to install 8.2.4 no version later otherwise the program will break. You will also need SQL, more information on installation for each of these please refer to each of these software and packages documentation.
 
+Link to video showing functionality: [https://drive.google.com/file/d/1o6O7Xe68_5F8X6m04mS4GKcBlFNQ0cNn/view]
+
 ## Contribution
 
 For any contributions please submit them either via my buisiness email below or if its a bug, in the feedback/bug tracker
